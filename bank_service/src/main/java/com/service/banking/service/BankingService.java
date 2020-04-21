@@ -10,7 +10,7 @@ import com.service.banking.dto.TransactionDetails;
 
 public interface BankingService {
 
-	public String registerCustomer(CustomerDTO userDTO);
+	public String registerCustomer(CustomerDTO customerDTO);
 	
 	public String createAccountForCustomer(AccountReqDTO accDTO);
 	
