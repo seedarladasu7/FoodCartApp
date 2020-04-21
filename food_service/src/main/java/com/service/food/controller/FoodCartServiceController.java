@@ -60,7 +60,7 @@ public class FoodCartServiceController {
 		return new ResponseEntity<>(foodService.findFoodItems(0, itemName, "itemName"), HttpStatus.OK);
 	}
 
-	@PostMapping("/user/orderFoor")
+	@PostMapping("/user/orderFood")
 	public ResponseEntity<String> orderFood(@RequestBody OrderFoodItemsDTO orderItemsDTO) {
 
 		String message = foodService.orderFoodItems(orderItemsDTO);
