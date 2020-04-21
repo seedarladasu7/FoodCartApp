@@ -58,7 +58,8 @@ public class BankingServiceController {
 
 	@PostMapping("/fundTransfer")
 	public ResponseEntity<String> transferFunds(@RequestBody FundTransferDTO ftDTO) {
-		return new ResponseEntity<>(bankingService.transferFunds(ftDTO), HttpStatus.OK);
+		String message = bankingService.transferFunds(ftDTO);
+		return new ResponseEntity<>(message, HttpStatus.OK);
 	}
 
 	@GetMapping("/{custId}/{txnMode}/statement")

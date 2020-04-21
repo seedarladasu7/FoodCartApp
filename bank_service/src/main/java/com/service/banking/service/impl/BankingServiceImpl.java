@@ -141,7 +141,7 @@ public class BankingServiceImpl implements BankingService {
 				ftDTO.setTxnMode("web");
 			}
 
-			if(StringUtils.isEmpty(ftDTO.getFromAccount())) {
+			if(StringUtils.isEmpty(ftDTO.getFromAccount()) || StringUtils.equals(ftDTO.getFromAccount() , "card")) {
 				ftDTO.setFromAccount(fromAcc.getAccNumber());
 			}
 			
