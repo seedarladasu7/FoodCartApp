@@ -6,9 +6,11 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.stereotype.Repository;
 
 import com.service.food.entity.FoodItem;
 
+@Repository
 public interface FoodItemRepository extends JpaRepository<FoodItem, Integer>{
 	
 	Optional<List<FoodItem>> findByVendorIdAndDate(Integer vendorId, String date);

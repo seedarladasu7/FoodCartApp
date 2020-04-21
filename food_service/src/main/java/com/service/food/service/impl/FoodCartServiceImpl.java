@@ -14,10 +14,15 @@ import org.springframework.stereotype.Service;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.service.food.dto.FoodItemDTO;
+import com.service.food.dto.OrderFoodItemsDTO;
 import com.service.food.dto.UserDTO;
 import com.service.food.entity.FoodItem;
+import com.service.food.entity.FoodOrder;
+import com.service.food.entity.OrderItem;
 import com.service.food.entity.User;
 import com.service.food.repository.FoodItemRepository;
+import com.service.food.repository.FoodOrderRepository;
+import com.service.food.repository.OrderItemRepository;
 import com.service.food.repository.UserRepository;
 import com.service.food.service.FoodCartService;
 
@@ -25,14 +30,20 @@ import com.service.food.service.FoodCartService;
 public class FoodCartServiceImpl implements FoodCartService {
 
 	private static ObjectMapper objectMapper = new ObjectMapper();
-	
+
 	SimpleDateFormat simpDate = new SimpleDateFormat("dd-MM-yyyy");
 
 	@Autowired
 	UserRepository userRepository;
 
 	@Autowired
+	FoodOrderRepository foodOrderRepository;
+
+	@Autowired
 	FoodItemRepository foodItemRepository;
+
+	@Autowired
+	OrderItemRepository orderItemRepository;
 
 	@Override
 	public String registerUser(UserDTO userDTO) {
@@ -68,7 +79,7 @@ public class FoodCartServiceImpl implements FoodCartService {
 	public List<FoodItemDTO> findFoodItems(Integer vendorId, String itemName, String searchType) {
 
 		Optional<List<FoodItem>> foodItemListOpt = null;
-		
+
 		String date = simpDate.format(new Date());
 
 		if (StringUtils.equalsIgnoreCase(searchType, "vendorId")) {
@@ -86,6 +97,44 @@ public class FoodCartServiceImpl implements FoodCartService {
 			}
 		}
 		return new ArrayList<>();
+	}
+
+	@Override
+	public String orderFoodItems(OrderFoodItemsDTO orderItemsDTO) {
+
+		StringBuilder messageBuilder = new StringBuilder();
+		if (StringUtils.isNotEmpty(String.valueOf(orderItemsDTO.getUserId()))) {
+			Optional<User> userOpt = userRepository.findById(orderItemsDTO.getUserId());
+
+			if (userOpt.isPresent()) {
+				User user = userOpt.get();
+				FoodOrder foodOrder = new FoodOrder();
+				foodOrder.setUser(user);
+				foodOrder.setOrderDate(simpDate.format(new Date()));
+				foodOrder = foodOrderRepository.save(foodOrder);
+
+				OrderItem orderItem = null;
+				Optional<FoodItem> foodItemOpt = null;
+
+				for (Integer itemId : orderItemsDTO.getFoodItems()) {
+					foodItemOpt = foodItemRepository.findById(itemId);
+					if (foodItemOpt.isPresent()) {
+						orderItem = new OrderItem();
+						orderItem.setFoodOrder(foodOrder);
+						orderItem.setItemId(itemId);
+						orderItemRepository.save(orderItem);
+					} else {
+						messageBuilder.append("foodItem is not available with ID: " + itemId.toString());
+					}
+				}
+
+			} else {
+				messageBuilder.append("Invalid user...");
+			}
+		} else {
+			messageBuilder.append("Invalid user...");
+		}
+		return messageBuilder.toString();
 	}
 
 }
