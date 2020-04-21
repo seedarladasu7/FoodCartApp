@@ -61,15 +61,14 @@ public class BankingServiceImpl implements BankingService {
 	public String createAccountForCustomer(AccountReqDTO accDTO) {
 		Optional<Customer> custOpt = custRepository.findById(accDTO.getCustId());
 		if (custOpt.isPresent()) {
-			Account account = getAccountInfofromReq(accDTO, custOpt);
+			Account account = getAccountInfofromReq(accDTO, custOpt.get());
 			accRepository.save(account);
 			return "Account has been created successfully...";
 		}
 		return "Account creation failed.";
 	}
 
-	private Account getAccountInfofromReq(AccountReqDTO accDTO, Optional<Customer> custOpt) {
-		Customer cust = custOpt.get();
+	private Account getAccountInfofromReq(AccountReqDTO accDTO, Customer cust) {
 		Account account = new Account();
 		account.setBankName(accDTO.getBankName());
 		account.setAccNumber(BankingServiceUtils.generateRandom(12));
@@ -113,62 +112,80 @@ public class BankingServiceImpl implements BankingService {
 	public String transferFunds(FundTransferDTO ftDTO) {
 
 		String message = "";
+		Account fromAcc = null;
+		Account toAcc = null;
 
-		Account fromAcc = accRepository.findByAccNumber(ftDTO.getFromAccount());
+		try {
+			switch (ftDTO.getPayMode()) {
+			case ("card"):
+				fromAcc = accRepository.findByCardNumberAndCvvAndExpiryDate(ftDTO.getFromAccCardNo(),
+						ftDTO.getFromAccCvv(), ftDTO.getFromAccCardExpiryDate());
+				break;
 
-		Account toAcc = accRepository.findByAccNumber(ftDTO.getToAccount());
+			case ("accNo"):
+				fromAcc = accRepository.findByAccNumber(ftDTO.getFromAccount());
+				break;
 
-		float txnAmount = ftDTO.getTxnAmount();
+			default:
+				fromAcc = accRepository.findByAccNumber(ftDTO.getFromAccount());
 
-		if (fromAcc == null || toAcc == null) {
-			message += "Invalid Bank details provided...";
-		}
-
-		if (StringUtils.isEmpty(ftDTO.getTxnMode())) {
-			ftDTO.setTxnMode("web");
-		}
-
-		if (StringUtils.isNotEmpty(message)) {
-			return message;
-		} else {
-			if (fromAcc != null) {
-				float accBalance = fromAcc.getBalance();
-
-				if (accBalance < ftDTO.getTxnAmount()) {
-					message += "Insufficient balance...";
-				} else {
-					fromAcc.setBalance(fromAcc.getBalance() - ftDTO.getTxnAmount());
-					accRepository.save(fromAcc);
-
-					Transaction dtTxn = new Transaction();
-					dtTxn.setAccount(fromAcc);
-					dtTxn.setTxnType("Debit");
-					dtTxn.setTxnDate(java.sql.Timestamp.valueOf(simpDate.format(new Date())));
-					dtTxn.setFromAccount(ftDTO.getFromAccount());
-					dtTxn.setToAccount(ftDTO.getToAccount());
-					dtTxn.setTxnAmount(txnAmount);
-					dtTxn.setTxnMode(ftDTO.getTxnMode());
-					txnRepository.save(dtTxn);
-				}
 			}
 
-			if (toAcc != null) {
-				toAcc.setBalance(toAcc.getBalance() + ftDTO.getTxnAmount());
-				accRepository.save(toAcc);
+			toAcc = accRepository.findByAccNumber(ftDTO.getToAccount());
 
-				Transaction crTxn = new Transaction();
-				crTxn.setAccount(toAcc);
-				crTxn.setTxnType("Credit");
-				crTxn.setTxnDate(java.sql.Timestamp.valueOf(simpDate.format(new Date())));
-				crTxn.setFromAccount(ftDTO.getFromAccount());
-				crTxn.setToAccount(ftDTO.getToAccount());
-				crTxn.setTxnAmount(txnAmount);
-				crTxn.setTxnMode(ftDTO.getTxnMode());
-				txnRepository.save(crTxn);
+			if (fromAcc == null || toAcc == null) {
+				return "Invalid Bank details provided...";
 			}
+
+			if (StringUtils.isEmpty(ftDTO.getTxnMode())) {
+				ftDTO.setTxnMode("web");
+			}
+
+			if(StringUtils.isEmpty(ftDTO.getFromAccount())) {
+				ftDTO.setFromAccount(fromAcc.getAccNumber());
+			}
+			
+			if (fromAcc.getBalance() < ftDTO.getTxnAmount()) {
+				return "Insufficient balance...";
+			} else {
+				updateAndSaveTransaction(fromAcc, ftDTO, "fromAcc");
+			}
+
+			updateAndSaveTransaction(toAcc, ftDTO, "toAcc");
+			
 			message += "Transaction has been done successfully...";
+
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 		return message;
+	}
+
+	private void updateAndSaveTransaction(Account acc, FundTransferDTO ftDTO, String accType) {
+		float balance = 0f;
+		String txnType = "";
+
+		if (StringUtils.equals(accType, "fromAcc")) {
+			balance = acc.getBalance() - ftDTO.getTxnAmount();
+			txnType = "Debit";
+		} else if (StringUtils.equals(accType, "toAcc")) {
+			balance = acc.getBalance() + ftDTO.getTxnAmount();
+			txnType = "Credit";
+		}
+
+		acc.setBalance(balance);
+		accRepository.save(acc);
+
+		Transaction txn = new Transaction();
+		txn.setAccount(acc);
+		txn.setTxnType(txnType);
+		txn.setTxnDate(java.sql.Timestamp.valueOf(simpDate.format(new Date())));
+		txn.setFromAccount(ftDTO.getFromAccount());
+		txn.setToAccount(ftDTO.getToAccount());
+		txn.setTxnAmount(ftDTO.getTxnAmount());
+		txn.setTxnMode(ftDTO.getTxnMode());
+		txnRepository.save(txn);
+
 	}
 
 	@Override

@@ -17,5 +17,7 @@ public interface AccountRepository extends JpaRepository<Account, Integer> {
 	Optional<List<Account>> findByCustomer(Customer customer);
 	
 	Optional<List<Account>> findByMobileNumber(String mobileNum);
+	
+	Account findByCardNumberAndCvvAndExpiryDate(String cardNo, String cvv, String expiryDate);
 
 }

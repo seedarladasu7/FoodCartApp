@@ -25,10 +25,10 @@ public class BankingServiceUtils {
 		}
 	}
 
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		System.out.println(BankingServiceUtils.generateRandom(12));
 		System.out.println(BankingServiceUtils.getCardExpiryDate());
-	}
+	}*/
 
 	public static String generateRandom(int length) {
 		char[] digits = new char[length];
@@ -41,7 +41,7 @@ public class BankingServiceUtils {
 
 	public static String getCardExpiryDate() {
 		LocalDateTime localDateTime = new Date().toInstant().atZone(ZoneId.systemDefault()).toLocalDateTime();
-		return mmyyFormat.format(Date.from(localDateTime.plusYears(20).atZone(ZoneId.systemDefault()).toInstant()));
+		return mmyyFormat.format(Date.from(localDateTime.plusYears(5).atZone(ZoneId.systemDefault()).toInstant()));
 	}
 
 	public static boolean isCardateExpired(String mmyy) {
