@@ -1,17 +1,11 @@
 package com.service.food.entity;
 
-import java.util.Set;
-
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-
-import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import lombok.Data;
 import lombok.ToString;
@@ -36,9 +30,7 @@ public class FoodItem {
 	@Column(name = "date")
 	private String date;
 
-	@ManyToOne
-	@JoinColumn(name = "vendor_id")
-	@JsonBackReference
-	private Set<Vendor> vendor;
+	@Column(name = "vendor_id")
+	private Integer vendorId;
 
 }
