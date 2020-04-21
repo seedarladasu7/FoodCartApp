@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.service.food.client.BankServiceClient;
 import com.service.food.dto.FoodItemDTO;
@@ -59,12 +60,13 @@ public class FoodCartServiceController {
 		return new ResponseEntity<>(foodService.findFoodItems(0, itemName, "itemName"), HttpStatus.OK);
 	}
 
-	@GetMapping("/user/orderFoor")
+	@PostMapping("/user/orderFoor")
 	public ResponseEntity<String> orderFood(@RequestBody OrderFoodItemsDTO orderItemsDTO) {
 
 		String message = foodService.orderFoodItems(orderItemsDTO);
 
 		if (StringUtils.isEmpty(message)) {
+			objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 			FundTransferDTO fndTx = objectMapper.convertValue(orderItemsDTO, FundTransferDTO.class);
 
 			String txnStatus = bankServiceClient.transferFunds(fndTx);
