@@ -18,6 +18,6 @@ public interface FoodCartService {
 
 	public OrderStatusDTO orderFoodItems(OrderFoodItemsDTO orderItemsDTO);
 	
-	public void saveFoodOrder(FoodOrder foodOrder);
+	public void saveFoodOrder(FoodOrder foodOrder, String txnStatus);
 
 }

@@ -73,14 +73,17 @@ public class FoodCartServiceController {
 			FundTransferDTO fndTx = objectMapper.convertValue(orderItemsDTO, FundTransferDTO.class);
 
 			txnStatus = bankServiceClient.transferFunds(fndTx);
-			
+
 			if (StringUtils.containsIgnoreCase(txnStatus, "success")) {
-				foodService.saveFoodOrder(orderStatusDTO.getFoodOrder());
-				return new ResponseEntity<>("Order has been placed successfully..", HttpStatus.OK);
+				foodService.saveFoodOrder(orderStatusDTO.getFoodOrder(), "success");
+				return new ResponseEntity<>("Order has been placed successfully...", HttpStatus.OK);
+			} else if (StringUtils.containsIgnoreCase(txnStatus, "exception")
+					|| StringUtils.containsIgnoreCase(txnStatus, "fail")) {
+				foodService.saveFoodOrder(orderStatusDTO.getFoodOrder(), "fail");
 			}
 		}
 
-		throw new InvalidInputException("Order has been failed\n"+ txnStatus);
+		throw new InvalidInputException("Order has been failed\n" + txnStatus);
 	}
 
 	@PostMapping("/fundTransfer")

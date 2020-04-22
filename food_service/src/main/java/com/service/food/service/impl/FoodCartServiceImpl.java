@@ -35,8 +35,8 @@ public class FoodCartServiceImpl implements FoodCartService {
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
 	SimpleDateFormat simpDate = new SimpleDateFormat("dd-MM-yyyy");
-	
-	static String errStr = "Error occured"; 
+
+	static String errStr = "Error occured";
 
 	@Autowired
 	UserRepository userRepository;
@@ -116,7 +116,7 @@ public class FoodCartServiceImpl implements FoodCartService {
 				FoodOrder foodOrder = new FoodOrder();
 				foodOrder.setUser(user);
 				foodOrder.setOrderDate(simpDate.format(new Date()));
-				foodOrder.setOrderStatus("fail");
+				foodOrder.setOrderStatus("pending");
 				foodOrder = foodOrderRepository.save(foodOrder);
 				OrderItem orderItem = null;
 				Optional<FoodItem> foodItemOpt = null;
@@ -152,8 +152,8 @@ public class FoodCartServiceImpl implements FoodCartService {
 	}
 
 	@Override
-	public void saveFoodOrder(FoodOrder foodOrder) {
-		foodOrder.setOrderStatus("success");
+	public void saveFoodOrder(FoodOrder foodOrder, String txnStatus) {
+		foodOrder.setOrderStatus(txnStatus);
 		foodOrderRepository.save(foodOrder);
 	}
 
