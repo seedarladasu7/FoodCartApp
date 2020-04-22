@@ -21,6 +21,9 @@ import com.service.banking.dto.TransactionDetails;
 import com.service.banking.entity.Account;
 import com.service.banking.entity.Customer;
 import com.service.banking.entity.Transaction;
+import com.service.banking.exceptionclasses.InvalidInputException;
+import com.service.banking.exceptionclasses.RecordInsertionException;
+import com.service.banking.exceptionclasses.RecordNotFoundException;
 import com.service.banking.repository.AccountRepository;
 import com.service.banking.repository.CustomerRepository;
 import com.service.banking.repository.TransactionRepository;
@@ -65,7 +68,7 @@ public class BankingServiceImpl implements BankingService {
 			accRepository.save(account);
 			return "Account has been created successfully...";
 		}
-		return "Account creation failed.";
+		throw new InvalidInputException("Invalid Customer details provided...");
 	}
 
 	private Account getAccountInfofromReq(AccountReqDTO accDTO, Customer cust) {
@@ -90,7 +93,7 @@ public class BankingServiceImpl implements BankingService {
 			objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 			return objectMapper.convertValue(acctOptnl, AccountDTO.class);
 		}
-		return null;
+		throw new InvalidInputException("Invalid Account details provided...");
 	}
 
 	@Override
@@ -134,7 +137,7 @@ public class BankingServiceImpl implements BankingService {
 			toAcc = accRepository.findByAccNumber(ftDTO.getToAccount());
 
 			if (fromAcc == null || toAcc == null) {
-				return "Invalid Bank details provided...";
+				throw new InvalidInputException("Invalid Bank details provided...");
 			}
 
 			if (StringUtils.isEmpty(ftDTO.getTxnMode())) {
@@ -146,7 +149,7 @@ public class BankingServiceImpl implements BankingService {
 			}
 			
 			if (fromAcc.getBalance() < ftDTO.getTxnAmount()) {
-				return "Insufficient balance...";
+				throw new InvalidInputException("Insufficient balance...");
 			} else {
 				updateAndSaveTransaction(fromAcc, ftDTO, "fromAcc");
 			}
@@ -156,7 +159,7 @@ public class BankingServiceImpl implements BankingService {
 			message += "Transaction has been done successfully...";
 
 		} catch (Exception ex) {
-			ex.printStackTrace();
+			throw new InvalidInputException(ex.getMessage());
 		}
 		return message;
 	}
@@ -191,8 +194,6 @@ public class BankingServiceImpl implements BankingService {
 	@Override
 	public List<List<TransactionDetails>> retrieveCustomerBankStatement(int custId, String txnMode) {
 
-		String message = "";
-
 		Optional<Customer> custOptnl = custRepository.findById(custId);
 
 		if (custOptnl.isPresent()) {
@@ -220,14 +221,12 @@ public class BankingServiceImpl implements BankingService {
 				});
 				return lists;
 			} else {
-				message += "Invalid Account for customer: " + customer.getCustName();
+				throw new RecordNotFoundException("Invalid Account for customer: " + customer.getCustName());
 			}
 
 		} else {
-			message += "Invalid customer with customer id: " + custId;
+			throw new InvalidInputException("Invalid customer with customer id: " + custId);
 		}
-
-		return new ArrayList<>();
 	}
 
 }

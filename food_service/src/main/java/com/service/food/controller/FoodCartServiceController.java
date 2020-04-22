@@ -21,6 +21,7 @@ import com.service.food.dto.FundTransferDTO;
 import com.service.food.dto.OrderFoodItemsDTO;
 import com.service.food.dto.TransactionDetails;
 import com.service.food.dto.UserDTO;
+import com.service.food.exceptionclasses.InvalidInputException;
 import com.service.food.service.FoodCartService;
 
 @RestController
@@ -64,20 +65,19 @@ public class FoodCartServiceController {
 	public ResponseEntity<String> orderFood(@RequestBody OrderFoodItemsDTO orderItemsDTO) {
 
 		String message = foodService.orderFoodItems(orderItemsDTO);
-
+		String txnStatus = StringUtils.EMPTY;
 		if (StringUtils.isEmpty(message)) {
 			objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 			FundTransferDTO fndTx = objectMapper.convertValue(orderItemsDTO, FundTransferDTO.class);
 
-			String txnStatus = bankServiceClient.transferFunds(fndTx);
+			txnStatus = bankServiceClient.transferFunds(fndTx);
 
 			if (StringUtils.containsIgnoreCase(txnStatus, "success")) {
 				return new ResponseEntity<>("Order has been placed successfully..", HttpStatus.OK);
 			}
 		}
 
-		return new ResponseEntity<>("Order has been failed", HttpStatus.OK);
-
+		throw new InvalidInputException("Order has been failed\n"+ txnStatus);
 	}
 
 	@PostMapping("/fundTransfer")

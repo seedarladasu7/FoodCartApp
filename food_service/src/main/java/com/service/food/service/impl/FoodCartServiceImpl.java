@@ -20,6 +20,8 @@ import com.service.food.entity.FoodItem;
 import com.service.food.entity.FoodOrder;
 import com.service.food.entity.OrderItem;
 import com.service.food.entity.User;
+import com.service.food.exceptionclasses.InvalidInputException;
+import com.service.food.exceptionclasses.RecordNotFoundException;
 import com.service.food.repository.FoodItemRepository;
 import com.service.food.repository.FoodOrderRepository;
 import com.service.food.repository.OrderItemRepository;
@@ -96,13 +98,12 @@ public class FoodCartServiceImpl implements FoodCartService {
 						.collect(Collectors.toList());
 			}
 		}
-		return new ArrayList<>();
+		throw new RecordNotFoundException("No Food items found...");
 	}
 
 	@Override
 	public String orderFoodItems(OrderFoodItemsDTO orderItemsDTO) {
 
-		StringBuilder messageBuilder = new StringBuilder();
 		if (StringUtils.isNotEmpty(String.valueOf(orderItemsDTO.getUserId()))) {
 			Optional<User> userOpt = userRepository.findById(orderItemsDTO.getUserId());
 
@@ -124,17 +125,17 @@ public class FoodCartServiceImpl implements FoodCartService {
 						orderItem.setItemId(itemId);
 						orderItemRepository.save(orderItem);
 					} else {
-						messageBuilder.append("foodItem is not available with ID: " + itemId.toString());
+						throw new RecordNotFoundException("foodItem is not available with ID: " + itemId.toString());
 					}
 				}
 
 			} else {
-				messageBuilder.append("Invalid user...");
+				throw new InvalidInputException("Invalid user...");
 			}
 		} else {
-			messageBuilder.append("Invalid user...");
+			throw new InvalidInputException("Invalid user...");
 		}
-		return messageBuilder.toString();
+		return StringUtils.EMPTY;
 	}
 
 }
