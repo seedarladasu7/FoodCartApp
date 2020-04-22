@@ -19,6 +19,7 @@ import com.service.food.client.BankServiceClient;
 import com.service.food.dto.FoodItemDTO;
 import com.service.food.dto.FundTransferDTO;
 import com.service.food.dto.OrderFoodItemsDTO;
+import com.service.food.dto.OrderStatusDTO;
 import com.service.food.dto.TransactionDetails;
 import com.service.food.dto.UserDTO;
 import com.service.food.exceptionclasses.InvalidInputException;
@@ -64,15 +65,17 @@ public class FoodCartServiceController {
 	@PostMapping("/user/orderFood")
 	public ResponseEntity<String> orderFood(@RequestBody OrderFoodItemsDTO orderItemsDTO) {
 
-		String message = foodService.orderFoodItems(orderItemsDTO);
+		OrderStatusDTO orderStatusDTO = foodService.orderFoodItems(orderItemsDTO);
 		String txnStatus = StringUtils.EMPTY;
-		if (StringUtils.isEmpty(message)) {
+		if (StringUtils.isEmpty(orderStatusDTO.getErrorStatus())) {
+			orderItemsDTO.setTxnAmount(orderStatusDTO.getOrderAmount());
 			objectMapper.disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES);
 			FundTransferDTO fndTx = objectMapper.convertValue(orderItemsDTO, FundTransferDTO.class);
 
 			txnStatus = bankServiceClient.transferFunds(fndTx);
-
+			
 			if (StringUtils.containsIgnoreCase(txnStatus, "success")) {
+				foodService.saveFoodOrder(orderStatusDTO.getFoodOrder());
 				return new ResponseEntity<>("Order has been placed successfully..", HttpStatus.OK);
 			}
 		}

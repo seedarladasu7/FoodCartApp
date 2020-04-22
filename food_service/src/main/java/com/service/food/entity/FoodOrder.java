@@ -29,6 +29,9 @@ public class FoodOrder {
 	
 	@Column(name = "order_date")
 	private String orderDate;
+	
+	@Column(name = "order_status")
+	private String orderStatus;
 
 	@ManyToOne
 	@JoinColumn(name = "user_id")

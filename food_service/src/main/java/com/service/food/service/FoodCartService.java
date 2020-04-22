@@ -4,7 +4,9 @@ import java.util.List;
 
 import com.service.food.dto.FoodItemDTO;
 import com.service.food.dto.OrderFoodItemsDTO;
+import com.service.food.dto.OrderStatusDTO;
 import com.service.food.dto.UserDTO;
+import com.service.food.entity.FoodOrder;
 
 public interface FoodCartService {
 
@@ -14,6 +16,8 @@ public interface FoodCartService {
 
 	public List<FoodItemDTO> findFoodItems(Integer vendorId, String itemName, String searchType);
 
-	public String orderFoodItems(OrderFoodItemsDTO orderItemsDTO);
+	public OrderStatusDTO orderFoodItems(OrderFoodItemsDTO orderItemsDTO);
+	
+	public void saveFoodOrder(FoodOrder foodOrder);
 
 }

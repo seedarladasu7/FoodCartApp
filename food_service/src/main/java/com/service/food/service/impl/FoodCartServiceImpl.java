@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.service.food.dto.FoodItemDTO;
 import com.service.food.dto.OrderFoodItemsDTO;
+import com.service.food.dto.OrderStatusDTO;
 import com.service.food.dto.UserDTO;
 import com.service.food.entity.FoodItem;
 import com.service.food.entity.FoodOrder;
@@ -34,6 +35,8 @@ public class FoodCartServiceImpl implements FoodCartService {
 	private static ObjectMapper objectMapper = new ObjectMapper();
 
 	SimpleDateFormat simpDate = new SimpleDateFormat("dd-MM-yyyy");
+	
+	static String errStr = "Error occured"; 
 
 	@Autowired
 	UserRepository userRepository;
@@ -102,8 +105,9 @@ public class FoodCartServiceImpl implements FoodCartService {
 	}
 
 	@Override
-	public String orderFoodItems(OrderFoodItemsDTO orderItemsDTO) {
-
+	public OrderStatusDTO orderFoodItems(OrderFoodItemsDTO orderItemsDTO) {
+		float totalOrderAmt = 0f;
+		OrderStatusDTO sttausDTO = new OrderStatusDTO();
 		if (StringUtils.isNotEmpty(String.valueOf(orderItemsDTO.getUserId()))) {
 			Optional<User> userOpt = userRepository.findById(orderItemsDTO.getUserId());
 
@@ -112,30 +116,45 @@ public class FoodCartServiceImpl implements FoodCartService {
 				FoodOrder foodOrder = new FoodOrder();
 				foodOrder.setUser(user);
 				foodOrder.setOrderDate(simpDate.format(new Date()));
+				foodOrder.setOrderStatus("fail");
 				foodOrder = foodOrderRepository.save(foodOrder);
-
 				OrderItem orderItem = null;
 				Optional<FoodItem> foodItemOpt = null;
 
 				for (Integer itemId : orderItemsDTO.getFoodItems()) {
 					foodItemOpt = foodItemRepository.findById(itemId);
 					if (foodItemOpt.isPresent()) {
+						FoodItem fI = foodItemOpt.get();
+						totalOrderAmt += fI.getItemPrice();
 						orderItem = new OrderItem();
 						orderItem.setFoodOrder(foodOrder);
 						orderItem.setItemId(itemId);
 						orderItemRepository.save(orderItem);
 					} else {
+						sttausDTO.setErrorStatus(errStr);
 						throw new RecordNotFoundException("foodItem is not available with ID: " + itemId.toString());
 					}
 				}
+				sttausDTO.setFoodOrder(foodOrder);
+				sttausDTO.setOrderAmount(totalOrderAmt);
 
 			} else {
+				sttausDTO.setErrorStatus(errStr);
 				throw new InvalidInputException("Invalid user...");
 			}
 		} else {
+			sttausDTO.setErrorStatus(errStr);
 			throw new InvalidInputException("Invalid user...");
 		}
-		return StringUtils.EMPTY;
+		sttausDTO.setErrorStatus(StringUtils.EMPTY);
+
+		return sttausDTO;
+	}
+
+	@Override
+	public void saveFoodOrder(FoodOrder foodOrder) {
+
+		foodOrderRepository.save(foodOrder);
 	}
 
 }
