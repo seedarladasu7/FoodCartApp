@@ -153,7 +153,7 @@ public class FoodCartServiceImpl implements FoodCartService {
 
 	@Override
 	public void saveFoodOrder(FoodOrder foodOrder) {
-
+		foodOrder.setOrderStatus("success");
 		foodOrderRepository.save(foodOrder);
 	}
 
